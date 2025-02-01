@@ -17,7 +17,7 @@ types of spatial-keyword queries. Given the U-Ask paper cited below:
 2. Install dependencies with `pip install -r requirements.txt`.
 
 ## Usage
-1. Load the dataset in the `data` folder and update the `main.py` script with the correct file path.
+1. Create and load the dataset in the `data` folder (csv file type) and update the `main.py` script with the correct file path.
 2. Run the main script with `python main.py`.
 3. Monitor the output in the console.
 
