@@ -12,7 +12,7 @@ import numpy as np
 def main():
     # start timer 
     start = time.time()
-    dataset_path = "data/dataset.csv"
+    dataset_path = "preprocessing/dataset.csv"
     print("Loading Dataset")
     data = load_dataset(dataset_path)
     

@@ -1,6 +1,27 @@
 import time
     
 class POWER_BF:
+    """A class to process spatial queries using a brute-force approach.
+    Attributes:
+    -----------
+    index : object
+        An object containing spatial index, index to object ID mapping, and objects.
+    Methods:
+    --------
+    __init__(index):
+        Initializes the POWER_BF class with the given index.
+    process_query(query):
+        Processes the given query to find the nearest objects based on spatial location and applies keyword filters.
+        Parameters:
+            query (dict): A dictionary containing the query parameters:
+                - location (tuple): The spatial location to query.
+                - k (int): The number of nearest neighbors to retrieve.
+                - and_keywords (list): A list of keywords that must be present in the objects.
+                - or_keywords (list): A list of keywords where at least one must be present in the objects.
+                - negative_keywords (list): A list of keywords that must not be present in the objects.
+        Returns:
+            list: A list of objects that match the query criteria.
+    """
     def __init__(self, index):
         self.index = index
 

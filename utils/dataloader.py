@@ -2,6 +2,19 @@ import pandas as pd
 import time
 
 def load_dataset(csv_path):
+    """
+    Load a dataset from a CSV file, process 'Keywords' and 'Weights' columns.
+
+    Args:
+        csv_path (str): The file path to the CSV file.
+
+    Returns:
+        pandas.DataFrame: The loaded and processed DataFrame.
+
+    The function reads a CSV file into a pandas DataFrame, processes the 'Keywords' 
+    and 'Weights' columns by evaluating their string representations into lists, 
+    and prints the time taken to load the dataset.
+    """
     load_time = time.time()
     df = pd.read_csv(csv_path)
     df["Keywords"] = df["Keywords"].apply(lambda x: eval(x) if isinstance(x, str) else [])
@@ -11,12 +24,3 @@ def load_dataset(csv_path):
     return df
 
 
-# Example usage
-if __name__ == "__main__":
-    dataset_path = "data/dataset.csv"  # Change this to the actual dataset directory
-    df = load_dataset(dataset_path)
-    
-    print(df.head())  # Display first few rows
-    print(f"Total Records Loaded: {len(df)}")
-
-    # df.to_csv("dataset.csv", index=False)  # Save to CSV file

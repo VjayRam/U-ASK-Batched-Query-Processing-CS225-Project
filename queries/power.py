@@ -1,6 +1,20 @@
 import time
 
 class POWER:
+    """
+    A class to process spatial queries using a spatial index.
+    Attributes:
+    -----------
+    index : object
+        An object that contains the spatial index and related data.
+    Methods:
+    --------
+    __init__(index):
+        Initializes the POWER class with the given index.
+    process_query(query):
+        Processes a spatial query to find the nearest objects based on location and filters them
+        based on positive and negative keywords.
+    """
     def __init__(self, index):
         self.index = index
 

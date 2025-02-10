@@ -1,7 +1,20 @@
 import time
     
-# Boolean Range Query
 class RangeQuery:
+    """
+    A class to perform range queries on a spatial index.
+    Attributes:
+    -----------
+    index : object
+        An object that contains the spatial index and related data.
+    Methods:
+    --------
+    __init__(index):
+        Initializes the RangeQuery with the given index.
+    process_query(query):
+        Processes a range query and returns the results.
+    """
+    """"""
     def __init__(self, index):
         self.index = index
     

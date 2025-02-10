@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
 
-# Results Analysis
 class ResultsAnalysis:
+    """
+    This class provides methods to analyze and visualize the results of spatial computing queries.
+
+    Methods:
+    plot_results(results, title="Query Performance"): Plots a bar chart of the query performance results.
+    """
     @staticmethod
     def plot_results(results, title="Query Performance"):
         plt.figure(figsize=(10,5))
