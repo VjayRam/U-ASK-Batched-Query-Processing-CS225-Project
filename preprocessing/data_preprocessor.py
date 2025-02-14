@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import math
 
 def load_dataset(data_folder):
     """
@@ -46,11 +47,34 @@ def load_dataset(data_folder):
                             "FullText": full_text
                         })
     df = pd.DataFrame(data)
-    return df
+    return df 
+
+def split_and_save_data(df, sizes, base_filename="split_data"):
+    """
+    Split the dataframe into different subsets based on the given sizes and save as CSV.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to split.
+        sizes (list): List of percentages (0-100) for splitting the dataset.
+        base_filename (str): Base name for the output CSV files.
+    """
+    total_records = len(df)
+    
+    for size in sizes:
+        split_size = math.ceil((size / 100) * total_records)  # Get the split size based on percentage
+        split_data = df.head(split_size)  # Get the subset of data
+        
+        filename = f"{base_filename}_{size}%.csv"
+        split_data.to_csv(filename, index=False)
+        print(f"Saved {size}% data to {filename}")
+
 if __name__ == "__main__":
     dataset_path = "U-ask_data/"  
     df = load_dataset(dataset_path)
     
     print(df.head()) 
     print(f"Total Records Loaded: {len(df)}")
-    df.to_csv("dataset.csv", index=False)
+    
+    # Specify the percentages for splitting the dataset
+    split_sizes = [20, 40, 60, 80, 100]
+    split_and_save_data(df, split_sizes)

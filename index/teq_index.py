@@ -1,33 +1,43 @@
-from collections import defaultdict
-from scipy.spatial import KDTree
-import time
+from models.quadtree import QuadtreeNode
+
 
 class TEQIndex:
+    """_summary_
+    A class to represent a spatial index using a quadtree structure.
+    Attributes
+    ----------
+    spatial_index : QuadtreeNode
+        The root node of the quadtree used for spatial indexing.
+    objects : dict
+        A dictionary to store objects with their metadata.
+    Methods
+    -------
+    __init__(bounds):
+        Initializes the TEQIndex with the given bounds.
+    add_object(obj_id, location, keywords, full_text):
+        Adds an object to the spatial index and stores its metadata.
+    get_candidates(location, positive_keywords, negative_keywords, search_radius=10):
+        Retrieves candidate objects within a search radius that match positive keywords and do not match negative keywords.
     """
-    This class provides methods to analyze and visualize the results of spatial computing queries.
-
-    Methods:
-    build_index(data): Builds the spatial and textual index from the provided data.
-    """
-    def __init__(self):
-        self.spatial_index = None
-        self.textual_index = defaultdict(set)
+     
+    def __init__(self, bounds):
+        self.spatial_index = QuadtreeNode(bounds)
         self.objects = {}  
-        self.index_to_objectid = []  
 
-    def build_index(self, data):
-        teq_time = time.time()
-        print("Building TEQ Index")
-        locations = []
-        self.index_to_objectid = []
+    def add_object(self, obj_id, location, keywords, full_text):
+        self.objects[obj_id] = {'location': location, 'keywords': keywords, 'full_text': full_text}
+        self.spatial_index.insert(obj_id, location, keywords, full_text)
+    
+    def get_candidates(self, location, positive_keywords, negative_keywords, search_radius=10):
+        x, y = location
+        bounds = (x - search_radius, y - search_radius, x + search_radius, y + search_radius)
+        found_objects = []
+        self.spatial_index.query_range(bounds, found_objects)
         
-        for _, row in data.iterrows():
-            obj_id = row.ObjectID
-            self.objects[obj_id] = row  
-            locations.append((row.Latitude, row.Longitude))
-            self.index_to_objectid.append(obj_id)  
+        candidates = {obj_id for obj_id, _, keywords, _ in found_objects if any(word in keywords for word in positive_keywords)}
         
-        self.spatial_index = KDTree(locations)  
-        print("TEQ Index Built")
-        print(f"TEQ Index Time: {time.time() - teq_time}")
-
+        for obj_id, _, keywords, _ in found_objects:
+            if any(word in keywords for word in negative_keywords):
+                candidates.discard(obj_id)
+        
+        return candidates

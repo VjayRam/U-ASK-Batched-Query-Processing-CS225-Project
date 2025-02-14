@@ -15,3 +15,12 @@ class ResultsAnalysis:
         plt.ylabel("Execution Time (s)")
         plt.title(title)
         plt.show()
+
+    @staticmethod
+    def plot_line_results(results, title="Query Performance"):
+        plt.figure(figsize=(10,5))
+        plt.plot(results.keys(), results.values(), color='skyblue')
+        plt.xlabel("Query Type")
+        plt.ylabel("Execution Time (s)")
+        plt.title(title)
+        plt.show()
