@@ -4,3 +4,6 @@ env
 .DS_Store
 __pycache__/
 *.csv
+saved_indexes/*
+*.pkl
+metadata.json
