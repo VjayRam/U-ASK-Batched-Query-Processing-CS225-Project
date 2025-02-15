@@ -3,7 +3,7 @@ from utils.run_query import query_runner, run_query_with_save, run_saved_queries
 
 
 def main():
-    run_query_with_save("split_data_40%.csv")
+    run_query_with_save("split_data_20%.csv")
     # query_runner("split_data_20%.csv")
     sample_queries = [
         {
@@ -33,8 +33,6 @@ def main():
         print(f"Results: {result['results']}")
             
     
-
-
 
 if __name__ == "__main__":
     main()

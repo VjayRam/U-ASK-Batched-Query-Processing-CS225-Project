@@ -168,80 +168,76 @@ def run_query_with_save(csv_name, save_dir="saved_indexes", force_rebuild=True):
         save_dir: Main directory for all saved indexes
         force_rebuild: If True, rebuild index even if it exists
     """
-    # Create main directory if it doesn't exist
-    os.makedirs(save_dir, exist_ok=True)
+    # Check and clean directory if it exists
+    if os.path.exists(save_dir):
+        print(f"Removing existing index directory: {save_dir}")
+        import shutil
+        shutil.rmtree(save_dir)
     
-    # Final index will be in saved_indexes/final
-    final_dir = os.path.join(save_dir, "final")
-    dataset_path = "preprocessing/"+csv_name
+    # Create fresh directory
+    os.makedirs(save_dir)
+    print(f"Created new index directory: {save_dir}")
     
-    # Always rebuild if force_rebuild is True or if index doesn't exist
-    if force_rebuild or not os.path.exists(final_dir) or not os.path.isfile(os.path.join(final_dir, 'metadata.json')):
-        print("Building new index...")
-        print("Loading Dataset")
-        data = load_dataset(dataset_path)
-        total_records = data.shape[0]
-        print("Dataset Loaded total record:", total_records)
+    # Load and process dataset
+    dataset_path = "preprocessing/" + csv_name
+    print("Loading Dataset...")
+    data = load_dataset(dataset_path)
+    total_records = data.shape[0]
+    print(f"Dataset Loaded total records: {total_records:,}")
 
-        # Calculate optimal bounds from data
-        min_lat = data['Latitude'].min()
-        max_lat = data['Latitude'].max()
-        min_lon = data['Longitude'].min()
-        max_lon = data['Longitude'].max()
-        bounds = (min_lat, min_lon, max_lat, max_lon)
+    # Calculate bounds from data
+    min_lat = data['Latitude'].min()
+    max_lat = data['Latitude'].max()
+    min_lon = data['Longitude'].min()
+    max_lon = data['Longitude'].max()
+    bounds = (min_lat, min_lon, max_lat, max_lon)
+    
+    # Initialize index
+    teq = TEQIndex(bounds)
+    
+    # Process data in batches
+    batch_size = 200000  # 200K records per batch
+    start_time = time.time()
+    
+    batches = batch_process_data(data, batch_size)
+    total_batches = len(batches)
+    
+    print(f"Processing {total_batches} batches of {batch_size:,} records each")
+    
+    for i, batch in enumerate(batches, 1):
+        batch_start = time.time()
         
-        # Initialize index with calculated bounds
-        teq = TEQIndex(bounds)
+        # Insert batch
+        for obj_id, location, keywords, full_text in batch:
+            teq.add_object(obj_id, location, keywords, full_text)
         
-        # Process data in batches
-        batch_size = 200000  # Adjust based on available memory
-        start_time = time.time()
+        batch_time = time.time() - batch_start
+        records_per_sec = len(batch) / batch_time
         
-        batches = batch_process_data(data, batch_size)
-        total_batches = len(batches)
+        print(f"Batch {i}/{total_batches} completed in {batch_time:.2f}s "
+              f"({records_per_sec:,.0f} records/sec)")
         
-        print(f"Processing {total_batches} batches of {batch_size} records each")
-        
-        for i, batch in enumerate(batches, 1):
-            batch_start = time.time()
+        # Save milestone index every 2 million records
+        current_total = i * batch_size
+        if current_total % 2000000 == 0 or current_total >= total_records:
+            milestone = (current_total // 2000000) * 2
+            milestone_dir = os.path.join(save_dir, f"{milestone}M")
+            os.makedirs(milestone_dir, exist_ok=True)
             
-            # Insert batch
-            for obj_id, location, keywords, full_text in batch:
-                teq.add_object(obj_id, location, keywords, full_text)
-            
-            batch_time = time.time() - batch_start
-            records_per_sec = len(batch) / batch_time
-            
-            print(f"Batch {i}/{total_batches} completed in {batch_time:.2f}s "
-                  f"({records_per_sec:.0f} records/sec)")
-            
-            # Save index for every multiple of 2 million records
-            if teq.metadata['total_objects'] % 2_000_000 == 0:
-                milestone = teq.metadata['total_objects'] // 2_000_000 * 2_000_000
-                milestone_dir = os.path.join(save_dir, f"{milestone//1_000_000}M")
-                
-                # Remove existing directory if it exists
-                if os.path.exists(milestone_dir):
-                    import shutil
-                    shutil.rmtree(milestone_dir)
-                teq.save_index(milestone_dir)
-                print(f"Saved {milestone//1_000_000}M milestone index")
-        
-        total_index_time = time.time() - start_time
-        print(f"Total index build time: {total_index_time:.2f}s "
-              f"({total_records/total_index_time:.0f} records/sec average)")
-        
-        # Remove existing final directory if it exists
-        if os.path.exists(final_dir):
-            import shutil
-            shutil.rmtree(final_dir)
-        
-        # Save the final index
-        teq.save_index(final_dir)
-        print("Saved final index")
-    else:
-        print("Loading existing index...")
-        teq = TEQIndex.load_index(final_dir)
+            teq.save_index(milestone_dir)
+            print(f"\nSaved {milestone}M milestone index to {milestone_dir}")
+    
+    milestone_dir = os.path.join(save_dir, "final")
+    os.makedirs(milestone_dir, exist_ok=True)
+    teq.save_index(milestone_dir)
+    print(f"\nSaved {milestone}M milestone index to {milestone_dir}")
+    
+           
+    total_index_time = time.time() - start_time
+    print(f"\nIndexing Summary:")
+    print(f"Total index build time: {total_index_time:.2f}s")
+    print(f"Average speed: {total_records/total_index_time:,.0f} records/sec")
+    print(f"Total records processed: {total_records:,}")
     
     return teq
 
