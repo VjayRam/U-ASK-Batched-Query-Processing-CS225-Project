@@ -39,6 +39,6 @@ class POWERQueryProcessor:
             spatial_score = 1 - self.compute_distance(location, obj['location']) / 100
             textual_score = self.count_keyword_matches(obj['keywords'], positive_keywords)
             score = lambda_factor * spatial_score + (1 - lambda_factor) * textual_score
-            heapq.heappush(heap, (-score, obj_id, obj['location']))
+            heapq.heappush(heap, (-score, obj_id, obj['location'], obj['full_text']))
         
-        return [(heapq.heappop(heap)[1], heapq.heappop(heap)[2]) for _ in range(min(k, len(heap)))]
+        return [(heapq.heappop(heap)[0],heapq.heappop(heap)[1], heapq.heappop(heap)[2],heapq.heappop(heap)[3]) for _ in range(min(k, len(heap)))]
