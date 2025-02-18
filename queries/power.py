@@ -41,4 +41,4 @@ class POWERQueryProcessor:
             score = lambda_factor * spatial_score + (1 - lambda_factor) * textual_score
             heapq.heappush(heap, (-score, obj_id, obj['location'], obj['full_text']))
         
-        return [(heapq.heappop(heap)[0],heapq.heappop(heap)[1], heapq.heappop(heap)[2],heapq.heappop(heap)[3]) for _ in range(min(k, len(heap)))]
+        return [heapq.heappop(heap) for _ in range(min(k, len(heap)))]

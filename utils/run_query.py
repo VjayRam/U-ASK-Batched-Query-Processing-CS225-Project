@@ -123,7 +123,7 @@ def run_saved_queries(save_dir: str, queries: List[dict]) -> List[dict]:
     
     power = POWERQueryProcessor(teq)
     results = []
-    
+
     for i, query in enumerate(queries, 1):
         print(f"\nExecuting query {i}/{len(queries)}")
         query_start = time.time()
@@ -157,7 +157,7 @@ def run_saved_queries(save_dir: str, queries: List[dict]) -> List[dict]:
     print(f"Average query time: {avg_query_time:.3f}s")
     print(f"Total query time: {total_query_time:.3f}s")
     
-    return results
+    return results, total_query_time, avg_query_time
 
 def run_query_with_save(csv_name, save_dir="saved_indexes", force_rebuild=True):
     """

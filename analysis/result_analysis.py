@@ -20,7 +20,7 @@ class ResultsAnalysis:
     def plot_line_results(results, title="Query Performance"):
         plt.figure(figsize=(10,5))
         plt.plot(results.keys(), results.values(), color='skyblue')
-        plt.xlabel("Query Type")
+        plt.xlabel("Dataset Size")
         plt.ylabel("Execution Time (s)")
         plt.title(title)
         plt.show()
