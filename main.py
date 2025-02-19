@@ -1,19 +1,21 @@
-from utils.run_query import query_runner, run_query_with_save, run_saved_queries
+from utils.run_query import run_saved_queries
 from analysis.result_analysis import ResultsAnalysis as Res
 from benchmark.query_gen import QueryGenerator
 
 
 
 def main():
-    # run_query_with_save("split_data_100%.csv")
+    # run_build_index("split_data_100%.csv")
     # query_runner("split_data_100%.csv")
+
+    #TODO: create a benchmarkar for the query performance base on graphs reqired in the report
     n = 1
     n_pos = 2
     n_neg = 2
     k = [5]
     lambda_factor = [0.5]
     # loop over the indexes and run the queries for each index and store the average query time for each index in a dictionary
-    indexes = ['2M', '4M', '6M', '8M', '10M']
+    indexes = ['2M', '4M', '6M']
     avg_query_times = {}
     queries = []
     qg = QueryGenerator()
@@ -34,21 +36,7 @@ def main():
             print(f"Results: {result['results']}")
 
     # plot the average query time for each index
-    Res.plot_line_results(avg_query_times, "Query Performance")
-
-    # results, avg_query, total_query = run_saved_queries('saved_indexes/final', sample_queries)
-    #     
-    # # Print detailed results if needed
-    # for result in results:
-    #     print(f"\nQuery {result['query_id']} Results:")
-    #     print(f"Parameters: {result['query_params']}")
-    #     print(f"Time: {result['query_time']:.3f}s")
-    #     print(f"Results: {result['results']}")
-# 
-    # 
-    # Res.plot_line_results({"1M": 0.005, "2M": 0.006, "3M": 0.007}, "Query Performance")
-    #         
-    
+    Res.plot_line_results(avg_query_times, "Query Performance")    
 
 if __name__ == "__main__":
     main()

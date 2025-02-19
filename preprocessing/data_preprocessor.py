@@ -51,6 +51,7 @@ def load_dataset(data_folder):
 
 def split_and_save_data(df, sizes, base_filename="split_data"):
     """
+    TODO: REMOVE THIS FUNCTION
     Split the dataframe into different subsets based on the given sizes and save as CSV.
     
     Args:

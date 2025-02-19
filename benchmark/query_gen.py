@@ -32,12 +32,3 @@ class QueryGenerator:
             })
         return queries
     
-
-def main():
-    qg = QueryGenerator()
-    queries = qg.generate_queries(10, 5, 5, 10, 0.5)
-    for query in queries:
-        print(query)
-
-if __name__ == "__main__":
-    main()

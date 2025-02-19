@@ -7,7 +7,25 @@ from typing import List, Tuple
 import os
 
 def batch_process_data(data, batch_size: int = 100000) -> List[Tuple]:
-    """Pre-process data into sorted batches for more efficient insertion"""
+    """_summary_
+    Process data into batches for efficient indexing.
+    
+    This function takes a pandas DataFrame containing spatial-textual data and converts it into batches
+    of tuples for more efficient processing. Each tuple contains:
+    - ObjectID: Unique identifier for the record
+    - Location: (Latitude, Longitude) coordinates
+    - Keywords: Associated keywords/tags
+    - FullText: Complete text description
+    
+    The records are sorted by location coordinates to optimize spatial indexing performance.
+
+    Args:
+        data (_type_): _description_
+        batch_size (int, optional): _description_. Defaults to 100000.
+
+    Returns:
+        List[Tuple]: _description_
+    """
     # Convert data to list of tuples for faster processing
     records = []
     for _, row in data.iterrows():
@@ -24,75 +42,89 @@ def batch_process_data(data, batch_size: int = 100000) -> List[Tuple]:
     # Split into batches
     return [records[i:i + batch_size] for i in range(0, len(records), batch_size)]
 
-def query_runner(csv_name, save_dir="saved_index"):
+def query_runner_without_save(csv_name,location:Tuple[float,float],positive_keywords:List[str],negative_keywords:List[str],k:int,lambda_factor:float):
+    """
+    Run a query without saving the index
+    
+    This function loads a dataset from a CSV file, processes it into batches for efficient indexing,
+    and then runs a query on the index without saving it. It returns the results of the query.
+    
+    Args:
+        csv_name: Name of the CSV file to process
+        location: Tuple containing latitude and longitude
+        positive_keywords: List of positive keywords to match
+        negative_keywords: List of negative keywords to exclude
+        k: Number of results to return
+        lambda_factor: Weight between spatial and textual relevance
+    """
     # Calculate bounds from data first to avoid reallocation
     dataset_path = "preprocessing/"+csv_name
     
-    # Check if saved index exists
-    if os.path.exists(save_dir) and os.path.isfile(os.path.join(save_dir, 'metadata.json')):
-        print("Loading existing index...")
-        teq = TEQIndex.load_index(save_dir)
-    else:
-        print("Building new index...")
-        print("Loading Dataset")
-        data = load_dataset(dataset_path)
-        total_records = data.shape[0]
-        print("Dataset Loaded total record:", total_records)
+   
+    print("Building new index...")
+    print("Loading Dataset")
+    data = load_dataset(dataset_path)
+    total_records = data.shape[0]
+    print("Dataset Loaded total record:", total_records)
 
-        # Calculate optimal bounds from data
-        min_lat = data['Latitude'].min()
-        max_lat = data['Latitude'].max()
-        min_lon = data['Longitude'].min()
-        max_lon = data['Longitude'].min()
-        bounds = (min_lat, min_lon, max_lat, max_lon)
+    # Calculate optimal bounds from data
+    min_lat = data['Latitude'].min()
+    max_lat = data['Latitude'].max()
+    min_lon = data['Longitude'].min()
+    max_lon = data['Longitude'].min()
+    bounds = (min_lat, min_lon, max_lat, max_lon)
         
-        # Initialize index with calculated bounds
-        teq = TEQIndex(bounds)
+    # Initialize index with calculated bounds
+    teq = TEQIndex(bounds)
         
-        # Process data in batches
-        batch_size = 100000  # Adjust based on available memory
-        start_time = time.time()
+    # Process data in batches
+    batch_size = 100000  # Adjust based on available memory
+    start_time = time.time()
         
-        batches = batch_process_data(data, batch_size)
-        total_batches = len(batches)
+    batches = batch_process_data(data, batch_size)
+    total_batches = len(batches)
         
-        print(f"Processing {total_batches} batches of {batch_size} records each")
+    print(f"Processing {total_batches} batches of {batch_size} records each")
         
-        for i, batch in enumerate(batches, 1):
-            batch_start = time.time()
+    for i, batch in enumerate(batches, 1):
+        batch_start = time.time()
             
             # Insert batch
-            for obj_id, location, keywords, full_text in batch:
-                teq.add_object(obj_id, location, keywords, full_text)
+        for obj_id, location, keywords, full_text in batch:
+            teq.add_object(obj_id, location, keywords, full_text)
             
-            batch_time = time.time() - batch_start
-            records_per_sec = len(batch) / batch_time
+        batch_time = time.time() - batch_start
+        records_per_sec = len(batch) / batch_time
             
-            print(f"Batch {i}/{total_batches} completed in {batch_time:.2f}s "
+        print(f"Batch {i}/{total_batches} completed in {batch_time:.2f}s "
                   f"({records_per_sec:.0f} records/sec)")
         
-        total_index_time = time.time() - start_time
-        print(f"Total index build time: {total_index_time:.2f}s "
-              f"({total_records/total_index_time:.0f} records/sec average)")
+    total_index_time = time.time() - start_time
+    print(f"Total index build time: {total_index_time:.2f}s "
+    f"({total_records/total_index_time:.0f} records/sec average)")
         
-        # Save the index
-        teq.save_index(save_dir)
-
     # Run query
     power = POWERQueryProcessor(teq)
     query_start = time.time()
     
-    results = power.process_query(
-        location=(9.02579,7.47525),
-        positive_keywords=["voice"],
-        negative_keywords=["back"],
-        k=5,
-        lambda_factor=0.5
-    )
+    print(f"Running query with parameters: location={location}, positive_keywords={positive_keywords}, negative_keywords={negative_keywords}, k={k}, lambda_factor={lambda_factor}")
+    try:
+        results = power.process_query(
+            location=(location[0], location[1]),
+            positive_keywords=positive_keywords,
+            negative_keywords=negative_keywords,
+            k=k,
+                lambda_factor=lambda_factor
+            )
+        query_time = time.time() - query_start
+        print(f"Query time: {query_time:.3f}s")
+        print(f"Results: {results}")
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Please check the query parameters")
+        return None
     
-    query_time = time.time() - query_start
-    print(f"Query time: {query_time:.3f}s")
-    print(f"Results: {results}")
+    
 
 def run_saved_queries(save_dir: str, queries: List[dict]) -> List[dict]:
     """
@@ -159,7 +191,7 @@ def run_saved_queries(save_dir: str, queries: List[dict]) -> List[dict]:
     
     return results, total_query_time, avg_query_time
 
-def run_query_with_save(csv_name, save_dir="saved_indexes", force_rebuild=True):
+def run_build_index(csv_name, save_dir="saved_indexes", force_rebuild=True):
     """
     Build or load index and save it periodically
     
@@ -240,40 +272,4 @@ def run_query_with_save(csv_name, save_dir="saved_indexes", force_rebuild=True):
     print(f"Total records processed: {total_records:,}")
     
     return teq
-
-# Example usage
-if __name__ == "__main__":
-    # Example queries
-    sample_queries = [
-        {
-            'location': (9.02579, 7.47525),
-            'positive_keywords': ['voice'],
-            'negative_keywords': ['back'],
-            'k': 5,
-            'lambda_factor': 0.5
-        },
-        {
-            'location': (9.12345, 7.54321),
-            'positive_keywords': ['restaurant', 'food'],
-            'negative_keywords': ['closed'],
-            'k': 10,
-            'lambda_factor': 0.7
-        }
-    ]
-    
-    try:
-        # Run queries using saved index
-        results = run_saved_queries('saved_index', sample_queries)
-        
-        # Print detailed results if needed
-        for result in results:
-            print(f"\nQuery {result['query_id']} Results:")
-            print(f"Parameters: {result['query_params']}")
-            print(f"Time: {result['query_time']:.3f}s")
-            print(f"Results: {result['results']}")
-            
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        print("Please build the index first using query_runner()")
-
 
