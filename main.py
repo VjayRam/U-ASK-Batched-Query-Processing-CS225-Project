@@ -123,7 +123,7 @@ def main():
 
     for ind in indexes:
         print(f"Running queries for index: {ind}")
-        teq_index = TEQIndex.load_index("saved_indexes/2M")
+        teq_index = TEQIndex.load_index(f"saved_indexes/{ind}")
         power = POWERQueryProcessor(teq_index)
         batch_processor = BatchPOWERQueryProcessor(teq_index, location_threshold=10.0)
         total_query_times_batch[ind] = Benchmark.run_batch_queries(batch_processor, queries)
