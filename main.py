@@ -6,7 +6,7 @@ from utils.run_query import run_saved_queries
 from analysis.result_analysis import ResultsAnalysis as Res
 from benchmark.query_gen import QueryGenerator
 from queries.batch_query import BatchPOWERQueryProcessor, create_batch_queries
-
+from collections import defaultdict
 
 
 def main():
@@ -116,19 +116,24 @@ def main():
     # print(f"Number of results: {len(results)}")
     qg = QueryGenerator()
     queries = qg.generate_queries(100, 2, 2, 5, 0.5)
-    indexes = ['2M', '4M', '6M']
-    avg_query_times_group = {}
-    avg_query_times_batch = {}
+    indexes = ['2M', '4M', '6M','final']
+    total_query_times_group = {}
+    total_query_times_batch = {}
+    total_query_times_combine= defaultdict(list)
+
     for ind in indexes:
         print(f"Running queries for index: {ind}")
         teq_index = TEQIndex.load_index("saved_indexes/2M")
         power = POWERQueryProcessor(teq_index)
         batch_processor = BatchPOWERQueryProcessor(teq_index, location_threshold=10.0)
-        avg_query_times_batch[ind] = Benchmark.run_batch_queries(batch_processor, queries)
-        avg_query_times_group[ind] = Benchmark.run_group_queries(power, queries)
+        total_query_times_batch[ind] = Benchmark.run_batch_queries(batch_processor, queries)
+        total_query_times_group[ind] = Benchmark.run_group_queries(power, queries)
+        total_query_times_combine[ind].append(total_query_times_batch[ind])
+        total_query_times_combine[ind].append(total_query_times_group[ind])
         print("************************************************")
 
-    Res.plot_line_results(avg_query_times_batch, "Batch Queries")
-    Res.plot_line_results(avg_query_times_group, "Group Queries")
+    Res.plot_line_results(total_query_times_batch, "Batch Queries",y_label="Total Execution Time (s)")
+    Res.plot_line_results(total_query_times_group, "Group Queries",y_label="Total Execution Time (s)")
+    Res.plot_line_results(total_query_times_combine, "Combined Queries",y_label="Total Execution Time (s)")
 if __name__ == "__main__":
     main()

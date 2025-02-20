@@ -17,7 +17,7 @@ class ResultsAnalysis:
         plt.show()
 
     @staticmethod
-    def plot_line_results(results, title="Query Performance"):
+    def plot_line_results(results, title="Query Performance", x_label="Dataset Size", y_label="Execution Time (s)"):
         plt.figure(figsize=(10,5))
         plt.plot(results.keys(), results.values(), color='skyblue', marker='o')
         plt.xlabel("Dataset Size")
