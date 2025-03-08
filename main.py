@@ -7,6 +7,7 @@ from analysis.result_analysis import ResultsAnalysis as Res
 from benchmark.query_gen import QueryGenerator
 from queries.batch_query import BatchPOWERQueryProcessor, create_batch_queries
 from collections import defaultdict
+import os
 
 
 def main():
@@ -114,9 +115,23 @@ def main():
     # print(f"Time taken: {time_end - time_start:.3f}s")
     # print(f"Number of queries: {len(queries)}")
     # print(f"Number of results: {len(results)}")
+    queries = []
     qg = QueryGenerator()
-    queries = qg.generate_queries(100, 2, 2, 5, 0.5)
-    indexes = ['2M', '4M', '6M','final']
+    loc_ranges = [[(0, 90), (-90, -180)], [(-90, 0), (0, 90)], [(0, 90), (-180, 180)], [(-90, 0), (-180, 180)], [(-90, 90), (-180, 180)], [(-90, 90), (0, 180)], [(-90, 90), (-180, 0)], [(0,10), (-10, 10)]]
+    for i in loc_ranges:
+        queries += qg.generate_queries(125, 3, 2, 10, 0.5, i)
+    print("Queries Generated!!")
+
+    output_dir = "benchmark/data"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "generated_queries.txt")
+    with open(output_file, "a") as f:
+        for query in queries:
+            query_str = f"{query['location']}, {','.join(query['positive_keywords'])},{','.join(query['negative_keywords'])}, {query['k']}, {query['lambda_factor']}"
+            f.write(query_str + "\n")
+    print(f"Generated 1000 queries and saved to {output_file}")
+    
+    indexes = ['final']
     total_query_times_group = {}
     total_query_times_batch = {}
     total_query_times_combine= defaultdict(list)

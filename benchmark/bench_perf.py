@@ -43,7 +43,8 @@ class Benchmark:
         time_end = time.time()
         print("--------------------------------")
         print("Batch Queries")
-        print(f"Time taken: {time_end - time_start:.3f}s")
+        print(f"Average Time: {(time_end - time_start)/1000}")
+        print(f"Total Time: {time_end - time_start:.3f}s")
         print(f"Number of queries: {len(queries)}")
         print("--------------------------------")
         return time_end - time_start
