@@ -70,3 +70,23 @@ class Benchmark:
         print(f"Number of queries: {len(queries)}")
         print("--------------------------------")
         return time_end - time_start
+    
+    @staticmethod
+    def variable_cluster_test(query_processor, queries, cluster_sizes=[10, 20, 40, 60, 80, 100]):
+        n = len(queries)
+        res = []
+        print("--------------------------------")
+        print("Batch Queries for variable cluster sizes")
+        for i in cluster_sizes:
+            time_start = time.time()
+            results = query_processor.process_batch_queries(queries, i)
+            time_end = time.time()
+            print("--------------------------------")
+            print(f"Cluster Size: {i}")
+            print(f"Average Time: {(time_end - time_start)/n}")
+            print(f"Total Time: {time_end - time_start:.3f}s")
+            print(f"Number of queries: {len(queries)}")
+            print("--------------------------------")
+            res.append(time_end-time_start)
+
+        return res

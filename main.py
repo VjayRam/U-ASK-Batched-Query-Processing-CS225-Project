@@ -115,8 +115,9 @@ def main():
     # print(f"Time taken: {time_end - time_start:.3f}s")
     # print(f"Number of queries: {len(queries)}")
     # print(f"Number of results: {len(results)}")
-    queries = Benchmark.generate_experiment(5000)
+    queries = Benchmark.generate_experiment(1000)
     cluster_size = 20
+    cluster_sizes = [10, 20, 50, 100]
     
     indexes = ['final']
     total_query_times_group = {}
@@ -132,10 +133,13 @@ def main():
         total_query_times_group[ind] = Benchmark.run_group_queries(power, queries)
         total_query_times_combine[ind].append(total_query_times_batch[ind])
         total_query_times_combine[ind].append(total_query_times_group[ind])
+        query_times_for_cluster = Benchmark.variable_cluster_test(batch_processor, queries, cluster_sizes)
         print("************************************************")
 
     Res.plot_line_results(total_query_times_batch, "Batch Queries",y_label="Total Execution Time (s)")
     Res.plot_line_results(total_query_times_group, "Group Queries",y_label="Total Execution Time (s)")
     Res.plot_line_results(total_query_times_combine, "Combined Queries",y_label="Total Execution Time (s)")
+    Res.plot_cluster_results(query_times_for_cluster, cluster_sizes)
+
 if __name__ == "__main__":
     main()

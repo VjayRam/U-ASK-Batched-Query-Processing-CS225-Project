@@ -24,3 +24,12 @@ class ResultsAnalysis:
         plt.ylabel("Execution Time (s)")
         plt.title(title)
         plt.show()
+
+    @staticmethod
+    def plot_cluster_results(results, clusters, title="Performance for Variable Clusters", x_label="Cluster Size", y_label="Execution Time (s)"):
+        plt.figure(figsize=(10, 5))
+        plt.plot(clusters, results, color="skyblue", marker='o')
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
+        plt.show()
