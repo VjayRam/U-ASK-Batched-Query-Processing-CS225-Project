@@ -44,8 +44,15 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
         
         return intersection_size / union_size if union_size > 0 else 0.0
 
-    def _cluster_locations(self, queries: List[SpatialQuery]) -> Dict[int, List[SpatialQuery]]:
-        """Group queries by spatial proximity using hierarchical clustering (optimized)"""
+    def _cluster_locations(self, queries: List[SpatialQuery], max_cluster_size: int = None) -> Dict[int, List[SpatialQuery]]:
+        """
+        Group queries by spatial proximity using hierarchical clustering (optimized)
+        
+        Args:
+            queries: List of SpatialQuery objects
+            max_cluster_size: Optional maximum number of queries per cluster. If specified,
+                             clustering will respect this limit by creating new clusters when needed.
+        """
         if len(queries) <= 1:
             return {0: queries}
 
@@ -53,12 +60,16 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
         locations = np.array([query.location for query in queries])
         
         # For small sets, use a faster direct calculation
-        if len(queries) <= 10:
+        if len(queries) <= 25:
             # Simplified clustering for small sets
             clusters = {}
             for i, query1 in enumerate(queries):
                 assigned = False
                 for cluster_id, cluster_queries in clusters.items():
+                    # Skip clusters that have reached max size limit
+                    if max_cluster_size is not None and len(cluster_queries) >= max_cluster_size:
+                        continue
+                        
                     # Check if this query is close to any existing cluster
                     query2 = cluster_queries[0]  # Use first query in cluster as reference
                     distance = np.sqrt(np.sum((np.array(query1.location) - np.array(query2.location))**2))
@@ -81,6 +92,25 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
             clustered_queries = defaultdict(list)
             for query, cluster_id in zip(queries, cluster_labels):
                 clustered_queries[cluster_id].append(query)
+            
+            # Post-process to respect max_cluster_size if specified
+            if max_cluster_size is not None:
+                final_clusters = {}
+                new_cluster_id = 1
+                
+                for cluster_id, cluster_queries in clustered_queries.items():
+                    # If cluster is within size limit, keep it as is
+                    if len(cluster_queries) <= max_cluster_size:
+                        final_clusters[new_cluster_id] = cluster_queries
+                        new_cluster_id += 1
+                    else:
+                        # Split oversized cluster into smaller ones
+                        for i in range(0, len(cluster_queries), max_cluster_size):
+                            chunk = cluster_queries[i:i + max_cluster_size]
+                            final_clusters[new_cluster_id] = chunk
+                            new_cluster_id += 1
+                
+                return final_clusters
             
             return dict(clustered_queries)
 
@@ -137,16 +167,20 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
             
         return dict(clusters)
 
-    def _group_queries(self, queries: List[SpatialQuery]) -> Dict[int, List[SpatialQuery]]:
+    def _group_queries(self, queries: List[SpatialQuery], max_cluster_size: int = None) -> Dict[int, List[SpatialQuery]]:
         """
         Group queries based on both spatial proximity and keyword similarity (optimized)
+        
+        Args:
+            queries: List of SpatialQuery objects
+            max_cluster_size: Optional maximum number of queries per cluster
         """
         # Early return for small query sets
         if len(queries) <= 1:
             return {0: queries}
             
         # First group by spatial proximity
-        spatial_clusters = self._cluster_locations(queries)
+        spatial_clusters = self._cluster_locations(queries, max_cluster_size)
         
         # Then, within each spatial cluster, group by keyword similarity
         final_clusters = {}
@@ -326,7 +360,7 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
             
         return results
 
-    def process_batch_queries(self, queries: List[Dict]) -> Dict[int, List[Tuple]]:
+    def process_batch_queries(self, queries: List[Dict], max_cluster_size: int = None) -> Dict[int, List[Tuple]]:
         """
         Process multiple queries efficiently using optimized Grouped Query Batching (GQB)
         
@@ -340,6 +374,8 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
                         'k': int,
                         'lambda_factor': float
                     }
+            max_cluster_size: Optional maximum number of queries per cluster.
+                             Controls how queries are grouped for batch processing.
         
         Returns:
             Dictionary mapping query_id to results
@@ -375,7 +411,7 @@ class BatchPOWERQueryProcessor(POWERQueryProcessor):
         ]
         
         # Group queries by both spatial proximity and keyword similarity
-        grouped_queries = self._group_queries(spatial_queries)
+        grouped_queries = self._group_queries(spatial_queries, max_cluster_size)
         
         # Process each group with a unified query plan
         all_results = {}
