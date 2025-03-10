@@ -82,6 +82,7 @@ class TEQIndex:
                       positive_keywords: List[str], 
                       negative_keywords: List[str], 
                       search_radius: float = 10) -> Set[int]:
+        """Get candidate objects based on location and keywords"""
         # Ensure buffer is flushed before querying
         if self._batch_buffer:
             self._flush_buffer()

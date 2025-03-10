@@ -10,6 +10,17 @@ import json
 
 @dataclass
 class SpatialQuery:
+    """
+    Represents a spatial query with location, keywords, and other parameters.
+    
+    Attributes:
+        query_id (int): Unique identifier for the query.
+        location (Tuple[float, float]): Latitude and longitude of the query location.
+        positive_keywords (List[str]): List of keywords that should be present in the results.
+        negative_keywords (List[str]): List of keywords that should not be present in the results.
+        k (int): Number of top results to return.
+        lambda_factor (float): Weight factor between spatial and textual relevance.
+    """
     query_id: int
     location: Tuple[float, float]
     positive_keywords: List[str]

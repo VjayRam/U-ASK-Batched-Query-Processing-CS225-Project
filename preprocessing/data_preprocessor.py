@@ -51,7 +51,6 @@ def load_dataset(data_folder):
 
 def split_and_save_data(df, sizes, base_filename="split_data"):
     """
-    TODO: REMOVE THIS FUNCTION
     Split the dataframe into different subsets based on the given sizes and save as CSV.
     
     Args:
@@ -77,5 +76,5 @@ if __name__ == "__main__":
     print(f"Total Records Loaded: {len(df)}")
     
     # Specify the percentages for splitting the dataset
-    split_sizes = [20, 40, 60, 80, 100]
+    split_sizes = [100]
     split_and_save_data(df, split_sizes)

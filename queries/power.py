@@ -25,12 +25,15 @@ class POWERQueryProcessor:
         self.teq_index = teq_index
     
     def compute_distance(self, loc1, loc2):
+        """Compute Euclidean distance between two locations."""
         return sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
     
     def count_keyword_matches(self, keywords, positive_keywords):
+        """Count the number of positive keywords that match the given keywords."""
         return sum(1 for word in positive_keywords if word in keywords)
     
     def process_query(self, location, positive_keywords, negative_keywords, k, lambda_factor=0.5):
+        """Process the query by combining spatial and textual scores and return the top-k results."""
         candidates = self.teq_index.get_candidates(location, positive_keywords, negative_keywords)
         
         heap = []

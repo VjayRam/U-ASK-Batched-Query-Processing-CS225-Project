@@ -36,6 +36,7 @@ class QuadtreeNode:
         self.children: Optional[List['QuadtreeNode']] = None
     
     def subdivide(self):
+        # Calculate midpoints
         x_min, y_min, x_max, y_max = self.bounds
         mid_x = (x_min + x_max) / 2
         mid_y = (y_min + y_max) / 2
